@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>AFIT Lost &amp; Found Portal | Project SP-014</title>
+    <!-- PWA -->
+    <link rel="manifest" href="/static/manifest.webmanifest">
+    <meta name="theme-color" content="#ffffff">
+    <meta name="description" content="Report, search and recover lost and found items across AFIT campus.">
+    <link rel="icon" type="image/png" sizes="192x192" href="/static/icon-192.png">
+    <link rel="apple-touch-icon" href="/static/icon-192.png">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="AFIT L&F">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-full flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex justify-between items-center">
+            <div class="flex items-center gap-3 cursor-pointer" onclick="switchTab('browse')">
+                <div class="w-10 h-10 rounded-lg bg-emerald-600 flex items-center justify-center text-white text-sm font-black">AF</div>
+                <div>
+                    <h1 class="text-base font-extrabold tracking-tight text-slate-900 leading-tight">AFIT Lost &amp; Found</h1>
+                    <p class="text-[11px] text-slate-500 font-medium leading-tight">Air Force Institute of Technology &middot; Property Recovery</p>
+                </div>
+            </div>
+            <nav class="flex items-center gap-1 sm:gap-2">
+                <button onclick="switchTab('browse')" id="btn-browse" class="px-3 sm:px-4 py-2 rounded-lg font-semibold text-sm transition bg-emerald-600 text-white">Browse</button>
+                <button onclick="switchTab('report')" id="btn-report" class="px-3 sm:px-4 py-2 rounded-lg font-semibold text-sm transition text-slate-600 hover:text-slate-900 hover:bg-slate-100">Report Item</button>
+                <button onclick="switchTab('guide')" id="btn-guide" class="hidden sm:flex px-3 sm:px-4 py-2 rounded-lg font-semibold text-sm transition text-slate-600 hover:text-slate-900 hover:bg-slate-100 items-center">Protocols</button>
+                <div id="authArea" class="ml-2"></div>
+            </nav>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full">
+
+        <!-- BROWSE -->
+        <div id="section-browse" class="space-y-8">
+            <!-- Hero + search card -->
+            <div class="bg-slate-900 rounded-2xl p-6 sm:p-10 text-white grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                <div class="space-y-4">
+                    <h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight leading-tight">AFIT Lost &amp; Found Portal</h2>
+                    <p class="mt-3 text-emerald-100/90 text-sm sm:text-base font-semibold">Report it. Search it. Recover it.</p>
+                    <p class="text-slate-300 text-sm sm:text-base leading-relaxed max-w-md">
+                        Report lost or found items across AFIT campus locations and complete a secure,
+                        verified handover through the campus security desk.
+                    </p>
+                    <div class="flex gap-3 pt-1">
+                        <div class="bg-white/10 px-5 py-3 rounded-lg border border-white/10 text-center">
+                            <div id="stat-total" class="text-2xl font-extrabold">0</div>
+                            <div class="text-[10px] text-slate-300 font-bold uppercase tracking-wider">Total Logged</div>
+                        </div>
+                        <div class="bg-white/10 px-5 py-3 rounded-lg border border-white/10 text-center">
+                            <div id="stat-active" class="text-2xl font-extrabold text-amber-400">0</div>
+                            <div class="text-[10px] text-slate-300 font-bold uppercase tracking-wider">Active Cases</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl p-6 text-slate-900 shadow-xl space-y-4">
+                    <h3 class="font-extrabold text-lg">Search lost or found items</h3>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1.5">Is your item lost or found?</label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <label class="flex items-center justify-center gap-2 px-4 py-2.5 border border-slate-200 rounded-lg text-sm font-semibold cursor-pointer has-[:checked]:border-emerald-600 has-[:checked]:bg-emerald-50">
+                                <input type="radio" name="heroType" value="" checked class="text-emerald-600" onchange="setHeroType('')">All
+                            </label>
+                            <label class="flex items-center justify-center gap-2 px-4 py-2.5 border border-slate-200 rounded-lg text-sm font-semibold cursor-pointer has-[:checked]:border-emerald-600 has-[:checked]:bg-emerald-50">
+                                <input type="radio" name="heroType" value="lost" class="text-emerald-600" onchange="setHeroType('lost')">Lost
+                            </label>
+                            <label class="flex items-center justify-center gap-2 px-4 py-2.5 border border-slate-200 rounded-lg text-sm font-semibold cursor-pointer has-[:checked]:border-emerald-600 has-[:checked]:bg-emerald-50 col-span-2">
+                                <input type="radio" name="heroType" value="found" class="text-emerald-600" onchange="setHeroType('found')">Found
+                            </label>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1.5">What are you looking for?</label>
+                        <input type="text" id="searchInput" placeholder="eg: Black Wallet, ID U23EE1084" oninput="loadItems()" class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500 transition">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1.5">Where?</label>
+                        <select id="filterLocation" onchange="loadItems()" class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500 transition cursor-pointer">
+                            <option value="">Any campus location</option>
+                            <option value="Mosque Area">Mosque Area</option>
+                            <option value="Bush Canteen">Bush Canteen</option>
+                            <option value="Front of ICT Center">Front of ICT Center</option>
+                            <option value="Alfa Hall">Alfa Hall</option>
+                            <option value="Back of Alfa Hall">Back of Alfa Hall</option>
+                            <option value="Amao Hall">Amao Hall</option>
+                            <option value="200lvl LR">200lvl Lecture Room</option>
+                            <option value="LR 201">Lecture Room 201</option>
+                            <option value="Library">Main Library</option>
+                            <option value="Yisa Doko Hall">Yisa Doko Hall</option>
+                            <option value="Main Gate / Security Post">Main Gate / Security Post</option>
+                        </select>
+                    </div>
+                    <button onclick="loadItems()" class="w-full bg-emerald-600 text-white py-3 rounded-lg font-bold hover:bg-emerald-700 transition">Search Items</button>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
+                <div>
+                    <select id="filterType" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500 transition cursor-pointer" onchange="loadItems()">
+                        <option value="">All Report Types</option>
+                        <option value="lost">Lost Items</option>
+                        <option value="found">Found Items</option>
+                    </select>
+                </div>
+                <div>
+                    <select id="filterCategory" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500 transition cursor-pointer" onchange="loadItems()">
+                        <option value="">All Categories</option>
+                        <option value="Electronics">Electronics &amp; Gadgets</option>
+                        <option value="IDs &amp; Cards">IDs, Cards &amp; Access</option>
+                        <option value="Bags &amp; Luggage">Bags &amp; Backpacks</option>
+                        <option value="Books &amp; Notes">Books &amp; Courseware</option>
+                        <option value="Keys &amp; Wallets">Keys &amp; Wallets</option>
+                        <option value="Clothing &amp; Wearables">Clothing &amp; Shoes</option>
+                        <option value="Other">Other Property</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Items grid -->
+            <div id="itemsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+        </div>
+
+        <!-- REPORT -->
+        <div id="section-report" class="hidden max-w-3xl mx-auto bg-white p-6 sm:p-10 rounded-2xl shadow-sm border border-slate-200">
+            <div class="mb-8 border-b border-slate-100 pb-5">
+                <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900">Submit Lost or Found Property Report</h2>
+                <p class="text-sm text-slate-500 mt-1">All reports are logged for tracking and verified handover through campus security.</p>
+            </div>
+
+            <form id="reportForm" onsubmit="submitItem(event)" class="space-y-6">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">Report Classification</label>
+                        <select id="item_type" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-emerald-500 focus:bg-white transition" required onchange="document.getElementById('custodyWrap').classList.toggle('hidden', this.value !== 'found'); checkSimilar();">
+                            <option value="lost">I Lost Something</option>
+                            <option value="found">I Found Something</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">Item Category</label>
+                        <select id="category" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-emerald-500 focus:bg-white transition" required onchange="document.getElementById('otherCategoryWrap').classList.toggle('hidden', this.value !== 'other')">
+                            <option value="Electronics">Electronics &amp; Gadgets</option>
+                            <option value="IDs &amp; Cards">IDs, Cards &amp; Access Documents</option>
+                            <option value="Bags &amp; Luggage">Bags, Backpacks &amp; Luggage</option>
+                            <option value="Books &amp; Notes">Books, Notebooks &amp; Courseware</option>
+                            <option value="Keys &amp; Wallets">Keys, Wallets &amp; Purses</option>
+                            <option value="Clothing &amp; Wearables">Clothing, Shoes &amp; Wearables</option>
+                            <option value="Other">Other Personal Property</option>
+                            <option value="other">Other (specify your own)</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="otherCategoryWrap" class="hidden">
+                    <label class="block text-sm font-bold text-slate-700 mb-2">Specify Category</label>
+                    <input type="text" id="other_category" placeholder="e.g. Medical Equipment, Sports Gear" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-emerald-500 focus:bg-white transition">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">Item Title / Specific Name</label>
+                    <input type="text" id="title" placeholder="e.g. Black School Bag (Nike), Student ID U23EE1084" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-emerald-500 focus:bg-white transition" required>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">Detailed Description &amp; Distinguishing Features</label>
+                    <textarea id="description" rows="4" placeholder="Color, brand, stickers, serial numbers, contents, or exact circumstances..." class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-emerald-500 focus:bg-white transition" required></textarea>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">Campus Location</label>
+                        <select id="location" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-emerald-500 focus:bg-white transition" required onchange="document.getElementById('otherLocationWrap').classList.toggle('hidden', this.value !== 'other')">
+                            <option value="Mosque Area">Mosque Area</option>
+                            <option value="Bush Canteen">Bush Canteen</option>
+                            <option value="Front of ICT Center">Front of ICT Center</option>
+                            <option value="Alfa Hall">Alfa Hall</option>
+                            <option value="Back of Alfa Hall">Back of Alfa Hall</option>
+                            <option value="Amao Hall">Amao Hall</option>
+                            <option value="200lvl LR">200lvl Lecture Room</option>
+                            <option value="LR 201">Lecture Room 201 (LR 201)</option>
+                            <option value="Library">Main Library</option>
+                            <option value="Yisa Doko Hall">Yisa Doko Hall</option>
+                            <option value="Main Gate / Security Post">Main Gate / Security Post</option>
+                            <option value="other">Other (specify)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">Date (Lost or Found)</label>
+                        <input type="date" id="date" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-emerald-500 focus:bg-white transition" required>
+                    </div>
+                </div>
+                <div id="otherLocationWrap" class="hidden">
+                    <label class="block text-sm font-bold text-slate-700 mb-2">Specify Location</label>
+                    <input type="text" id="other_location" placeholder="e.g. Cadet Mess Hall, Swimming Pool Area" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-emerald-500 focus:bg-white transition">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">How can a finder reach you about this item?</label>
+                    <div class="grid grid-cols-3 gap-3">
+                        <label class="flex items-center justify-center gap-2 px-3 py-3 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold cursor-pointer has-[:checked]:border-emerald-600 has-[:checked]:bg-emerald-50">
+                            <input type="radio" name="preferred_contact" value="email" checked class="text-emerald-600">Email
+                        </label>
+                        <label class="flex items-center justify-center gap-2 px-3 py-3 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold cursor-pointer has-[:checked]:border-emerald-600 has-[:checked]:bg-emerald-50">
+                            <input type="radio" name="preferred_contact" value="phone" class="text-emerald-600">Phone
+                        </label>
+                        <label class="flex items-center justify-center gap-2 px-3 py-3 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold cursor-pointer has-[:checked]:border-emerald-600 has-[:checked]:bg-emerald-50">
+                            <input type="radio" name="preferred_contact" value="both" class="text-emerald-600">Both
+                        </label>
+                    </div>
+                </div>
+
+                <div id="custodyWrap" class="hidden">
+                    <label class="block text-sm font-bold text-slate-700 mb-2">Where is the item now?</label>
+                    <select id="custody" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-emerald-500 focus:bg-white transition">
+                        <option value="security">Deposited at the security post / designated officer</option>
+                        <option value="finder">Still with me (the finder)</option>
+                    </select>
+                    <p class="text-xs text-slate-500 mt-1">Claimants will contact you by email or in-app chat to arrange verification and return.</p>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">Item Photo Upload (Optional)</label>
+                        <input type="file" id="image_file" accept="image/*" class="w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 transition cursor-pointer">
+                    </div>
+                    <div id="securityWrap">
+                        <label class="block text-sm font-bold text-slate-700 mb-2">Designated Security / Officer to Report To</label>
+                        <p class="text-xs text-slate-500 mb-2">Lost item: who finders should hand it to. Found item: who you handed it to.</p>
+                        <select id="security_personnel" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-emerald-500 focus:bg-white transition" onchange="document.getElementById('otherSecurityWrap').classList.toggle('hidden', this.value !== 'other')">
+                            <option value="Campus Security Desk / Hall Warden">Campus Security Desk / Hall Warden</option>
+                            <option value="Student">Student (self-managed handover)</option>
+                            <option value="Hall Warden">Hall Warden</option>
+                            <option value="ICT Security">ICT Security Unit</option>
+                            <option value="Main Gate Security Post">Main Gate Security Post</option>
+                            <option value="Lecturer / Staff Member">Lecturer / Staff Member</option>
+                            <option value="other">Other (specify)</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="otherSecurityWrap" class="hidden">
+                    <label class="block text-sm font-bold text-slate-700 mb-2">Specify Officer / Person</label>
+                    <input type="text" id="other_security" placeholder="e.g. Provost WO1 Bala, Dept Secretary" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-emerald-500 focus:bg-white transition">
+                </div>
+
+                <div id="similarWrap" class="hidden"></div>
+
+                <div class="bg-slate-50 p-6 rounded-xl border border-slate-200 space-y-4">
+                    <h3 class="text-sm font-extrabold text-slate-800 uppercase tracking-wider">Reporter Verification Details</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 mb-1">Your Full Name</label>
+                            <input type="text" id="contact_name" placeholder="Cadet / Student Name" class="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 transition" required>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 mb-1">Matric / ID Number</label>
+                            <input type="text" id="reporter_id" placeholder="e.g. U23CS1067" pattern="(?=.*[A-Za-z])(?=.*\d)[A-Za-z0-9/\-]{5,20}" title="Matric or staff ID with letters and numbers, e.g. U23CS1067 or AFIT/2024/8812" class="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 transition" required>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 mb-1">Phone Number</label>
+                            <input type="tel" id="contact_phone" placeholder="080XXXXXXXX" pattern="(\+234|0)[789][0-9]{9}" title="Nigerian phone number, e.g. 08031234567 or +2348031234567" class="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 transition" required>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">AFIT Campus Email</label>
+                        <input type="email" id="contact_email" placeholder="username@afit.edu.ng" class="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 transition" required>
+                    </div>
+                </div>
+
+                <div class="flex gap-4 pt-2">
+                    <button type="submit" class="flex-1 bg-emerald-600 text-white py-3.5 rounded-lg font-bold hover:bg-emerald-700 transition">Submit Official Security Report</button>
+                    <button type="button" onclick="switchTab('browse')" class="px-6 py-3.5 bg-slate-100 text-slate-700 rounded-lg font-bold hover:bg-slate-200 transition">Cancel</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- SECURITY PROTOCOLS -->
+        <div id="section-guide" class="hidden max-w-4xl mx-auto bg-white p-6 sm:p-10 rounded-2xl shadow-sm border border-slate-200 space-y-8">
+            <div class="border-b border-slate-100 pb-5">
+                <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900">Claim Verification &amp; Property Recovery Guidelines</h2>
+                <p class="text-slate-500 text-sm mt-1">To ensure secure retrieval and prevent fraudulent claims, all property recovery follows institutional standards.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-slate-50 p-6 rounded-xl border border-slate-200 space-y-2">
+                    <h3 class="text-lg font-bold text-slate-900">1. Mandatory Proof of Ownership</h3>
+                    <p class="text-sm text-slate-600 leading-relaxed">
+                        To claim any item (especially ID cards, phones, bags, or laptops), claimants must present their valid AFIT Student/Staff ID card and provide matching serial numbers, unique sticker descriptions, or unlock passcodes.
+                    </p>
+                </div>
+                <div class="bg-slate-50 p-6 rounded-xl border border-slate-200 space-y-2">
+                    <h3 class="text-lg font-bold text-slate-900">2. Designated Security Handover</h3>
+                    <p class="text-sm text-slate-600 leading-relaxed">
+                        Found items are formally deposited with designated campus authorities (Hall Wardens, ICT Security, or Main Gate Security Post). Handover requires signing the AFIT Property Logbook.
+                    </p>
+                </div>
+                <div class="bg-slate-50 p-6 rounded-xl border border-slate-200 space-y-2">
+                    <h3 class="text-lg font-bold text-slate-900">3. Unclaimed Property Policy</h3>
+                    <p class="text-sm text-slate-600 leading-relaxed">
+                        Per institution regulations, unclaimed perishable or general items remaining at the security desk after 30 days are transferred to the Central Provost Department for official auction or disposal.
+                    </p>
+                </div>
+                <div class="bg-slate-50 p-6 rounded-xl border border-slate-200 space-y-2">
+                    <h3 class="text-lg font-bold text-slate-900">4. Emergency Security Contact</h3>
+                    <p class="text-sm text-slate-600 leading-relaxed">
+                        For urgent reports of stolen or high-value items (laptops, motorcycles, sensitive documents), contact the AFIT Security Command Post immediately at <strong>ext. 4900</strong> or <strong>security@afit.edu.ng</strong>.
+                    </p>
+                </div>
+            </div>
+
+            <div class="pt-2 text-center">
+                <button onclick="switchTab('browse')" class="px-8 py-3 bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-700 transition">Return to Portal Catalog</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 py-6 mt-12 text-center text-xs text-slate-500 space-y-1">
+        <p class="font-bold text-slate-700">Air Force Institute of Technology (AFIT) &middot; Lost &amp; Found Management System (Project SP-014)</p>
+        <p>Secured Campus Property Recovery Portal</p>
+    </footer>
+
+    <!-- CLAIM MODAL -->
+    <div id="claimModal" class="fixed inset-0 bg-slate-900/60 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-200 space-y-5 relative max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-start">
+                <div>
+                    <h3 class="text-xl font-extrabold text-slate-900">Claim Property &amp; Verify Ownership</h3>
+                    <p class="text-xs text-slate-500 mt-0.5" id="modalItemTitle">Item Title</p>
+                </div>
+                <button onclick="closeClaimModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center font-bold text-slate-600 transition">&#10005;</button>
+            </div>
+
+            <form id="claimForm" onsubmit="submitClaim(event)" class="space-y-4">
+                <input type="hidden" id="claimItemId">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Your Full Name</label>
+                    <input type="text" id="claimant_name" placeholder="Cadet / Student Full Name" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 transition" required>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Matric / ID Number</label>
+                    <input type="text" id="claimant_id" placeholder="e.g. U23CS1067" pattern="(?=.*[A-Za-z])(?=.*\d)[A-Za-z0-9/\-]{5,20}" title="Matric or staff ID with letters and numbers, e.g. U23CS1067" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 transition" required>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Contact Phone Number</label>
+                    <input type="tel" id="claimant_phone" placeholder="080XXXXXXXX" pattern="(\+234|0)[789][0-9]{9}" title="Nigerian phone number, e.g. 08031234567" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 transition" required>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Proof of Ownership / Distinguishing Details</label>
+                    <textarea id="proof_description" rows="3" placeholder="Exact serial numbers, stickers, contents inside, or passcode to verify ownership..." class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 transition" required></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Proof Image (Optional)</label>
+                    <input type="file" id="proof_image" accept="image/*" class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 transition cursor-pointer">
+                    <p class="text-xs text-slate-500 mt-1">A photo of you with the item, its serial number, or a similar proof helps verification.</p>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">How would you like to reach the person holding the item?</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <label class="flex items-center justify-center gap-2 px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold cursor-pointer has-[:checked]:border-emerald-600 has-[:checked]:bg-emerald-50">
+                            <input type="radio" name="contact_method" value="email" checked class="text-emerald-600" onchange="updateClaimContactInfo()">
+                            Email
+                        </label>
+                        <label class="flex items-center justify-center gap-2 px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold cursor-pointer has-[:checked]:border-emerald-600 has-[:checked]:bg-emerald-50">
+                            <input type="radio" name="contact_method" value="chat" class="text-emerald-600" onchange="updateClaimContactInfo()">
+                            In-app chat
+                        </label>
+                    </div>
+                    <div id="claimContactInfo" class="mt-2 text-xs text-slate-600 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2"></div>
+                </div>
+
+                <div class="bg-amber-50 p-4 rounded-lg border border-amber-200 text-xs text-amber-800 leading-relaxed">
+                    <strong>Security Notice:</strong> Submitting this claim notifies the reporter and the designated security officer. The item only shows as returned after the handover is confirmed. Present your physical ID card at the security post for final release.
+                </div>
+
+                <div class="flex gap-3 pt-1">
+                    <button type="submit" id="claimSubmitBtn" class="flex-1 bg-emerald-600 text-white py-3 rounded-lg font-bold hover:bg-emerald-700 transition">Submit Verification Request</button>
+                    <button type="button" onclick="closeClaimModal()" class="px-5 py-3 bg-slate-100 text-slate-700 rounded-lg font-bold hover:bg-slate-200 transition">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- CHAT MODAL -->
+    <div id="chatModal" class="fixed inset-0 bg-slate-900/60 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full h-[70vh] flex flex-col shadow-2xl border border-slate-200">
+            <div class="p-4 border-b border-slate-200 flex justify-between items-center">
+                <div>
+                    <h3 class="font-bold text-slate-900">Item Chat</h3>
+                    <p id="chatItemTitle" class="text-xs text-slate-500"></p>
+                </div>
+                <button onclick="closeChat()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center font-bold text-slate-600 transition">&#10005;</button>
+            </div>
+            <div id="chatMessages" class="flex-1 overflow-y-auto p-4 space-y-3"></div>
+            <form onsubmit="sendChatMessage(event)" class="p-3 border-t border-slate-200 flex gap-2">
+                <input type="text" id="chatInput" placeholder="Type a message..." autocomplete="off" class="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:bg-white transition" required>
+                <button type="submit" class="bg-emerald-600 text-white px-4 rounded-lg font-bold text-sm hover:bg-emerald-700 transition">Send</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- DISPUTE MODAL -->
+    <div id="disputeModal" class="fixed inset-0 bg-slate-900/60 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-slate-200 space-y-4">
+            <div class="flex justify-between items-start">
+                <div>
+                    <h3 class="text-xl font-extrabold text-slate-900">Report this claim</h3>
+                    <p class="text-xs text-slate-500 mt-0.5" id="disputeItemTitle">Item</p>
+                </div>
+                <button onclick="closeDisputeModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center font-bold text-slate-600 transition">&#10005;</button>
+            </div>
+            <p class="text-xs text-slate-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">If this item is yours and the claim in progress is wrong, describe why. The reporter and the security desk will verify and contact you after review.</p>
+            <form id="disputeForm" onsubmit="submitDispute(event)" class="space-y-4">
+                <input type="hidden" id="disputeItemId">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Your Full Name</label>
+                    <input type="text" id="dispute_name" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 transition" required>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Your Email</label>
+                    <input type="email" id="dispute_email" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 transition" required>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Why is this claim wrong?</label>
+                    <textarea id="dispute_message" rows="3" placeholder="e.g. That laptop is mine - here are the exact serial number and stickers..." class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 transition" required></textarea>
+                </div>
+                <button type="submit" class="w-full bg-rose-600 text-white py-3 rounded-lg font-bold hover:bg-rose-700 transition">Submit Report</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- EDIT REPORT MODAL -->
+    <div id="editModal" class="fixed inset-0 bg-slate-900/60 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-200 space-y-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-start">
+                <div>
+                    <h3 class="text-xl font-extrabold text-slate-900">Edit Report</h3>
+                    <p class="text-xs text-slate-500 mt-0.5" id="editItemTitle">Item</p>
+                </div>
+                <button onclick="closeEditModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center font-bold text-slate-600 transition">&#10005;</button>
+            </div>
+            <form id="editForm" onsubmit="submitEdit(event)" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Title</label>
+                    <input type="text" id="edit_title" minlength="3" maxlength="120" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 transition" required>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Description</label>
+                    <textarea id="edit_description" rows="3" minlength="10" maxlength="1000" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 transition" required></textarea>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Category</label>
+                        <input type="text" id="edit_category" maxlength="80" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 transition" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Location</label>
+                        <input type="text" id="edit_location" maxlength="80" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 transition" required>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Date</label>
+                        <input type="date" id="edit_date" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 transition" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Report To (optional)</label>
+                        <input type="text" id="edit_security" maxlength="80" placeholder="e.g. Hall Warden, or a name" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 transition">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Preferred Contact</label>
+                    <div class="flex gap-4 text-sm text-slate-700">
+                        <label class="flex items-center gap-1.5"><input type="radio" name="edit_pref" value="email"> Email</label>
+                        <label class="flex items-center gap-1.5"><input type="radio" name="edit_pref" value="phone"> Phone</label>
+                        <label class="flex items-center gap-1.5"><input type="radio" name="edit_pref" value="both" checked> Both</label>
+                    </div>
+                </div>
+                <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 space-y-3">
+                    <h4 class="text-xs font-extrabold text-slate-800 uppercase tracking-wider">Reporter Details</h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 mb-1">Full Name</label>
+                            <input type="text" id="edit_contact_name" maxlength="80" pattern="[A-Za-z][A-Za-z .'-]{2,49}" title="Letters only, e.g. Mathew Umama" class="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 transition" required>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 mb-1">Matric / ID</label>
+                            <input type="text" id="edit_reporter_id" maxlength="20" pattern="(?=.*[A-Za-z])(?=.*\d)[A-Za-z0-9/\-]{5,20}" title="Letters and numbers, e.g. U23CS1067" class="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 transition" required>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 mb-1">Phone</label>
+                            <input type="tel" id="edit_contact_phone" pattern="(\+234|0)[789][0-9]{9}" title="Nigerian phone number, e.g. 08031234567" class="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 transition" required>
+                        </div>
+                    </div>
+                    <p class="text-xs text-slate-500">Contact email (<span id="edit_email_label" class="font-semibold"></span>) is your sign-in identity and cannot be changed here.</p>
+                </div>
+                <div id="editCustodyWrap" class="hidden">
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Where is the item held?</label>
+                    <select id="edit_custody" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-emerald-500 transition">
+                        <option value="security">Deposited at the security post / designated officer</option>
+                        <option value="finder">Still with me (the finder)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Replace Photo (optional)</label>
+                    <input type="file" id="edit_image" accept="image/*" class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 transition cursor-pointer">
+                </div>
+                <button type="submit" class="w-full bg-emerald-600 text-white py-3 rounded-lg font-bold hover:bg-emerald-700 transition">Save Changes</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- FINDER RESPONSE MODAL (for lost items) -->
+    <div id="foundModal" class="fixed inset-0 bg-slate-900/60 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-200 space-y-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-start">
+                <div>
+                    <h3 class="text-xl font-extrabold text-slate-900">I Found This Item</h3>
+                    <p class="text-xs text-slate-500 mt-0.5" id="foundItemTitle">Item</p>
+                </div>
+                <button onclick="closeFoundModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center font-bold text-slate-600 transition">&#10005;</button>
+            </div>
+            <p class="text-xs text-slate-500 bg-emerald-50 border border-emerald-200 rounded-lg p-3">No ownership quiz needed &mdash; just tell the owner where and when you found it. They will contact you to arrange the return.</p>
+            <form id="foundForm" onsubmit="submitFoundReport(event)" class="space-y-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Your Full Name</label>
+                        <input type="text" id="finder_name" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 transition" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Matric / ID Number</label>
+                        <input type="text" id="finder_id" placeholder="e.g. U23CS1067" pattern="(?=.*[A-Za-z])(?=.*\d)[A-Za-z0-9/\-]{5,20}" title="Matric or staff ID with letters and numbers" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 transition" required>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Email</label>
+                        <input type="email" id="finder_email" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 transition" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Phone Number</label>
+                        <input type="tel" id="finder_phone" placeholder="080XXXXXXXX" pattern="(\+234|0)[789][0-9]{9}" title="Nigerian phone number, e.g. 08031234567" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 transition" required>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Where did you find it?</label>
+                    <input type="text" id="location_found" placeholder="e.g. Near the Mosque Area, Block C corridor" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 transition" required>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Short Note (optional)</label>
+                    <textarea id="finder_message" rows="2" maxlength="500" placeholder="e.g. It is safe with me / at the security post" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 transition"></textarea>
+                </div>
+                <button type="submit" class="w-full bg-emerald-600 text-white py-3 rounded-lg font-bold hover:bg-emerald-700 transition">Send Finder Response</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- FINDER RESPONSES MODAL (owner view) -->
+    <div id="findersModal" class="fixed inset-0 bg-slate-900/60 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-200 space-y-4 max-h-[85vh] overflow-y-auto">
+            <div class="flex justify-between items-start">
+                <div>
+                    <h3 class="text-xl font-extrabold text-slate-900">Finder Responses</h3>
+                    <p class="text-xs text-slate-500 mt-0.5" id="findersItemTitle">Item</p>
+                </div>
+                <button onclick="closeFindersModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center font-bold text-slate-600 transition">&#10005;</button>
+            </div>
+            <div id="findersList" class="space-y-3"></div>
+        </div>
+    </div>
+
+    <!-- DISPUTE REVIEW MODAL -->
+    <div id="disputeViewModal" class="fixed inset-0 bg-slate-900/60 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-200 space-y-4 max-h-[85vh] overflow-y-auto">
+            <div class="flex justify-between items-start">
+                <div>
+                    <h3 class="text-xl font-extrabold text-slate-900">Dispute Reports</h3>
+                    <p class="text-xs text-slate-500 mt-0.5" id="disputeViewItemTitle">Item</p>
+                </div>
+                <button onclick="closeDisputeViewModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center font-bold text-slate-600 transition">&#10005;</button>
+            </div>
+            <div id="disputesList" class="space-y-3"></div>
+        </div>
+    </div>
+
+    <!-- AUTH MODAL -->
+    <div id="authModal" class="fixed inset-0 bg-slate-900/60 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-6 sm:p-8 shadow-2xl border border-slate-200 space-y-4">
+            <div class="flex justify-between items-start">
+                <div>
+                    <h3 class="text-xl font-extrabold text-slate-900" id="authTitle">Sign in</h3>
+                    <p class="text-xs text-slate-500 mt-0.5">Use your AFIT email to report items, claim and chat privately.</p>
+                </div>
+                <button onclick="closeAuthModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center font-bold text-slate-600 transition">&#10005;</button>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+                <button type="button" id="tab-signin" onclick="setAuthMode('signin')" class="py-2 rounded-lg text-sm font-bold bg-emerald-600 text-white">Sign In</button>
+                <button type="button" id="tab-signup" onclick="setAuthMode('signup')" class="py-2 rounded-lg text-sm font-bold bg-slate-100 text-slate-600">Sign Up</button>
+            </div>
+            <form id="authForm" onsubmit="submitAuth(event)" class="space-y-4">
+                <div id="authNameWrap">
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Your Full Name</label>
+                    <input type="text" id="auth_name" placeholder="Cadet / Student Full Name" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 transition">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">AFIT Email</label>
+                    <input type="email" id="auth_email" placeholder="username@afit.edu.ng" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 transition" required>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Password</label>
+                    <input type="password" id="auth_password" placeholder="At least 6 characters" minlength="6" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 transition" required>
+                </div>
+                <button type="submit" id="authSubmitBtn" class="w-full bg-emerald-600 text-white py-3 rounded-lg font-bold hover:bg-emerald-700 transition">Sign In</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
