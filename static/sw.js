@@ -1,5 +1,5 @@
 /* AFIT Lost & Found Portal — service worker */
-const CACHE = "afit-lf-v14";
+const CACHE = "afit-lf-v15";
 const APP_SHELL = ["/", "/static/icon-192.png", "/static/icon-512.png", "/static/manifest.webmanifest"];
 
 self.addEventListener("install", (event) => {

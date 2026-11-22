@@ -235,7 +235,7 @@ async function loadItems() {
                         </div>
                     </div>
                 </div>
-                <div class="px-5 pb-5 flex items-center gap-2">
+                <div class="px-5 pb-5 flex flex-wrap items-center gap-2">
                     ${item.status === 'Active' ? (
                         isMyReport
                             ? `<div class="flex-1 bg-slate-50 text-slate-500 py-2.5 rounded-lg text-xs font-bold text-center border border-slate-200">Your report &middot; ${isLost && item.found_reports_count ? `${item.found_reports_count} finder response${item.found_reports_count > 1 ? 's' : ''}` : 'awaiting a response'}</div>${isLost ? `<button onclick="markFound(${item.id})" class="bg-emerald-50 text-emerald-700 hover:bg-emerald-100 px-3 py-2.5 rounded-lg text-xs font-bold border border-emerald-200 transition" title="Item is back with me">Mark as Found</button><button onclick="closeReport(${item.id})" class="bg-slate-100 text-slate-500 hover:bg-rose-50 hover:text-rose-600 px-3 py-2.5 rounded-lg text-xs font-bold transition" title="Close this report without marking a return">Close</button>` : ''}${item.found_reports_count ? `<button onclick="viewFinders(${item.id})" class="bg-amber-50 text-amber-700 hover:bg-amber-100 px-3 py-2.5 rounded-lg text-xs font-bold border border-amber-200 transition">View</button>` : ''}`
