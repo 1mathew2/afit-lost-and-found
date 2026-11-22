@@ -2,65 +2,96 @@
 
 **Deliverables:** project proposal, process-model justification, repository link. **Marks: 4**
 
-## 1. Problem Statement
+## Why I picked this problem
 
-Every semester, students and staff at the Air Force Institute of Technology (AFIT) misplace
-phones, ID cards, laptops, chargers, wallets and textbooks in lecture halls, the library,
-hostels, the canteen and around campus. Today the only recovery channels are word of mouth,
-notice boards and ad-hoc WhatsApp messages. The result:
+Losing property on campus is such a common experience that nobody treats it as a systems
+problem anymore — we just shrug and post in a WhatsApp group. Every semester at AFIT, phones,
+ID cards, laptops, chargers and textbooks go missing in lecture halls, the library, hostels
+and the canteen. And the recovery channels we actually have are all informal: word of mouth,
+a notice board nobody checks, scattered WhatsApp messages that get buried within two days.
 
-- Owners rarely know whether their property was found or handed to security.
-- Finders have no standard, official way to hand in or report found property.
-- The security post keeps paper records that cannot be searched by students.
-- Recovered items pile up unclaimed because the right people are never matched.
+I kept running into the same four frustrations when I asked classmates about their experiences:
 
-There is no single, searchable, campus-wide system connecting "I lost this" with "I found this".
+- If you lose something, you have no way of knowing whether it was even found, let alone
+  handed to the security post.
+- If you *find* something, there is no official way to report it — you either hold onto it
+  awkwardly or hand it to security and hope the owner shows up.
+- The security post keeps paper records, which students can't search.
+- So recovered items pile up unclaimed, because the person who found it and the person who
+  lost it never meet in the middle.
 
-## 2. Target Users
+That last gap is what convinced me: the problem isn't a lack of goodwill, it's the absence of
+a single searchable place where "I lost this" and "I found this" can meet. That became my
+project.
 
-| User | Needs |
-|------|-------|
-| Student who lost an item | Report a loss quickly, search found items, respond to finders, verify and recover |
-| Finder of an item | Report what they found, state where it is held, connect with the rightful owner |
-| Campus security / hall wardens | A digital log of reported and handed-in property per post |
-| Student affairs / school administration | Oversight, dispute trail, usage statistics |
+## Who I'm building this for
 
-## 3. Objectives (SMART)
+I identified four groups of users, and I tried to keep all of them in mind while designing:
 
-1. Provide a web portal where any AFIT student can report a lost or found item in under 2 minutes.
-2. Provide search and filtering (type, category, location, keyword) over all active reports.
-3. Provide a verified claim-and-return workflow for found items (ownership questions + reporter confirmation).
-4. Provide a lightweight "I found this" response workflow for lost items, with private 1-to-1 chat.
-5. Keep an auditable trail of claims, disputes and resolutions.
-6. Deliver the above as an installable mobile-friendly PWA by week 13.
+- **The student who lost something** — they want to report the loss fast, search what's
+  already been found, talk to finders privately, and verify ownership to get the item back.
+- **The finder** — they want a quick, legitimate way to log what they found and say where
+  it's being held, without getting stuck with the item or hounded by strangers.
+- **Campus security and hall wardens** — they currently keep paper logs; a digital record of
+  what was reported and what was handed in, per post, is a genuine improvement for them too.
+- **Student affairs / administration** — they care about the dispute trail and overall usage,
+  though for v1.0 they're consumers of the audit trail rather than active users.
 
-## 4. Scope
+## What I set out to achieve (SMART objectives)
 
-**In scope (v1.0):** lost/found reporting with photos, search/filter, claim + verification flow,
-finder responses, private chat, dispute reports, reporter moderation (confirm/reject/edit/close),
-account sign-up/sign-in, validation, anti-spam limits, PWA install + offline shell, file persistence.
+1. Any AFIT student should be able to report a lost or found item in under two minutes.
+2. All active reports should be searchable and filterable by type, category, location and keyword.
+3. Found items should go through a *verified* claim-and-return flow — the finder asks ownership
+   questions and confirms the return, not just anyone who says "that's mine".
+4. Lost items should get a lighter "I found this" response flow, plus a private one-to-one chat
+   so the owner and a finder can arrange the handover.
+5. Every claim, dispute and resolution should leave an auditable trail.
+6. All of the above should ship as an installable, mobile-friendly PWA by week 13.
 
-**Out of scope (v1.0):** email/SMS notification servers, payment/reward handling, integration with
-the official student records system, native mobile apps, multi-campus tenancy, image recognition.
+## Scope
 
-## 5. Process Model — Selection and Justification
+I had to be disciplined here — this is a 13-week single-person project, and my instinct was to
+promise everything.
 
-**Selected: Incremental (iterative) model with weekly deliverables.**
+**In scope for v1.0:** lost/found reporting with photos, search and filtering, the claim and
+verification flow, finder responses, private chat, dispute reports, reporter moderation
+(confirm / reject / edit / close), account sign-up and sign-in, input validation, anti-spam
+limits, PWA install with an offline shell, and file-based persistence.
 
-| Candidate | Assessment |
-|-----------|-----------|
-| Waterfall | All requirements are not known up front; feedback from demo-ing to classmates would arrive too late (only at the end). Rejected. |
-| Pure prototyping | Throwaway prototypes waste effort when the core flows are clear. Rejected. |
-| Agile/Scrum (sprints) | Strong candidate, but the course is fixed to 13 weekly deliverables with graded artifacts each week. Rejected in its pure form. |
-| **Incremental** | Each week delivers a usable increment (proposal → requirements → plan → model → architecture → first module → demo → full system → hardening → tests → security → docs → final). Feedback from the Week 8 demo is absorbed before the final build. Matches the course structure exactly. **Selected.** |
+**Deliberately out of scope:** email/SMS notification servers (no mail server available to me),
+payment or reward handling, integration with the official student records system, native mobile
+apps, multi-campus support, and image recognition. I wrote these down early so that when the
+temptation came mid-project, I could point at this list and say no.
 
-Incremental delivery means the Week 8 prototype (report + browse + claim) is already a working
-system, and weeks 9–13 add chat, disputes, moderation, testing, security and documentation
-without rewriting the core.
+## Which process model I chose, and why
 
-## 6. Repository
+I went with the **incremental model**, structured around the course's weekly deliverables.
 
-- Local repository initialised at the project root with Git (`main` branch).
-- Initial commit: `SP-014: AFIT Lost & Found Portal - core system (FastAPI + PWA)`.
-- Layout: `main.py` (backend), `static/` (PWA front-end), `test_main.py` (tests),
-  `docs/` (this package), `requirements.txt`, `README.md`.
+I did seriously consider the alternatives:
+
+- **Waterfall** was tempting because the requirements felt clear to me at the start. But they
+  weren't, really — I knew I'd learn the most from putting a working system in front of
+  classmates, and waterfall only gives you that feedback at the very end. Too late to act on.
+- **Pure prototyping** didn't fit either, because the core flows (report → search → claim) are
+  well-understood problems; throwing away prototypes would just burn effort.
+- **Scrum** was the strongest competitor. The problem is that this course isn't organised into
+  sprints — it's organised into 13 graded weekly deliverables. Running Scrum on top of that
+  would mean double bookkeeping.
+
+The incremental model matches the course structure almost exactly: each week delivers a usable
+increment (proposal → requirements → plan → models → architecture → first module → demo →
+full system → hardening → testing → security → docs → final). The practical payoff showed up
+at the Week 8 prototype demo: by then I already had a working report-browse-claim system, and
+the feedback from that demo fed straight into weeks 9–13 without any rewrite of the core.
+
+## Repository
+
+I initialised a local Git repository at the project root (`main` branch) and made the first
+commit once the core system was stable:
+
+```
+9cefa6a SP-014: AFIT Lost & Found Portal - core system (FastAPI + PWA)
+```
+
+The layout is simple: `main.py` (backend), `static/` (the PWA front-end), `test_main.py`
+(automated tests), `docs/` (this package), plus `requirements.txt` and `README.md`.

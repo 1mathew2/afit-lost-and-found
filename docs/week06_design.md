@@ -2,69 +2,84 @@
 
 **Deliverables:** design-patterns note (≥ 2 patterns), wireframes, one SOLID-compliant module. **Marks: 6**
 
-## 1. Design Patterns Applied
+## 1. The design patterns I actually used
+
+I want to frame this honestly: I didn't sit down and think "which patterns shall I apply
+today?" — I built the thing, then recognised which patterns had emerged, and then *named* them
+and made sure they were applied consistently. That's how patterns are supposed to work in
+small projects, I think.
 
 ### Pattern 1 — Repository (persistence abstraction)
-All reads/writes of the data store go through two functions, `save_state()` and `load_state()`,
-plus module-level collections (`items_db`, `users_db`, `conversations`). The rest of the code
-never touches the file directly.
 
-- **Why:** the Week-5 plan calls for a PostgreSQL upgrade path. Because every mutation funnels
-  through the repository functions, swapping `db.json` for SQL means reimplementing one layer,
-  not hunting down file writes across the codebase.
-- **Where:** `main.py` — `save_state()` called after every mutation; `load_state()` at startup
-  (including the thread-key migration, which is itself repository behaviour).
+Every read and write of the data store goes through two functions: `save_state()` and
+`load_state()`, operating on module-level collections (`items_db`, `users_db`,
+`conversations`). Nothing else in the codebase touches the file directly.
 
-### Pattern 2 — Strategy (pluggable validation and permission policies)
-Behaviour that varies by context is selected at runtime rather than hard-coded in branches:
+Why this mattered: my week-5 plan calls for a PostgreSQL upgrade path. Because every mutation
+funnels through the repository functions, swapping `db.json` for SQL means reimplementing one
+layer, not hunting down file writes scattered across the codebase. It also gave me one place
+to put the "write on every mutation" durability rule.
 
-- **Contact gating strategy** — `public_item(item, viewer_email)` chooses which fields to emit
-  based on the viewer's relationship to the item (reporter / claimant / finder / stranger).
-  The same endpoint serves all four audiences; the *strategy* is the viewer relationship.
-- **Report-type strategies** — lost and found reports run different flows (finder-response vs
-  claim-with-proof, different required fields, different resolution actions). The form and the
-  card renderer switch field sets and action buttons on `item_type`.
-- **Thread resolution strategy** — `resolve_thread()` maps (user, peer) to a thread key
-  depending on who is the non-reporter partner (claimant or one of many finders).
+### Pattern 2 — Strategy (pluggable behaviour selected at runtime)
 
-### Pattern 3 — Facade (single-entry API surface)
-The front-end never touches domain logic; every operation is one facade call on the REST
-surface (`/api/items`, `/api/items/{id}/claim`, `/api/items/{id}/messages`, …). The facade
-hides validation, permission checks, persistence and status transitions behind stable URLs.
+Several places in the system where behaviour varies by context, and instead of hard-coding
+branches everywhere, the variation is packaged and selected at runtime:
+
+- **Contact gating.** `public_item(item, viewer_email)` decides which fields to emit based on
+  the viewer's relationship to the item — reporter, claimant, finder, or stranger. One
+  endpoint serves all four audiences; the *strategy* is the viewer relationship.
+- **Report-type strategies.** Lost and found reports run genuinely different flows: finder
+  responses versus claims-with-proof, different required fields, different resolution actions.
+  The form and the card renderer switch field sets and buttons on `item_type`.
+- **Thread resolution.** `resolve_thread()` maps a (user, peer) pair to a thread key depending
+  on who the non-reporter partner is — a claimant or one of several finders.
+
+### Pattern 3 — Facade (one door into the system)
+
+The front-end never touches domain logic. Every operation is a single call on the REST surface
+(`/api/items`, `/api/items/{id}/claim`, `/api/items/{id}/messages`, …). The facade hides
+validation, permission checks, persistence and status transitions behind stable URLs, which is
+why I could reorganise the internals repeatedly without the front-end noticing.
 
 ### Pattern 4 — Observer (polling-based notification)
-Unread chat indicators implement the observer intent: the browse view subscribes (15 s
-interval + on-demand `loadItems()`), the server publishes per-thread counts via
-`GET /api/chat/unread`, and the UI reacts (red dot on Chat / finder-response buttons).
-Chosen over WebSockets deliberately for demo robustness.
 
-## 2. SOLID-Compliant Module: the privacy sanitizer (`public_item`)
+The unread chat indicators follow the observer intent: the browse view subscribes (a 15-second
+interval plus an on-demand refresh), the server publishes per-thread counts via
+`GET /api/chat/unread`, and the UI reacts with a red dot. I chose polling over WebSockets
+deliberately — fewer moving parts to fail during a live demo.
+
+## 2. The SOLID module: the privacy sanitizer
 
 ```
 main.py :: public_item(item, viewer_email)
 ```
 
-- **S — Single responsibility:** it does exactly one thing — decide what a given viewer may
-  see of an item. No validation, no persistence, no status logic.
-- **O — Open/closed:** adding a new viewer relationship (e.g. "security officer") means adding
-  a flag inside `public_item`; the endpoint and every consumer stay untouched.
-- **L — Liskov:** any viewer type produces a valid item projection; consumers never receive a
-  shape they cannot render (all flags always present, booleans always defined).
-- **I — Interface segregation:** consumers receive only the flags they need
-  (`viewer_is_reporter`, `viewer_is_claimant`, `viewer_is_finder`, `viewer_is_rejected`,
-  `found_reports_count`) instead of the raw internal record with `rejected_claimants` and
-  `seeded` bookkeeping.
-- **D — Dependency inversion:** the API route depends on this abstraction, not on the storage
-  layout — which is why the front-end and the tests were unaffected when internal fields were
-  renamed during refactoring.
+I'm holding this function up as my SOLID-compliant module because it's the piece of the system
+I'm most confident defends itself on every principle:
 
-Evidence: the privacy tests (`test_public_api_strips_private_fields`) verify that anonymous
-viewers receive zero private fields while reporters receive their own — the module is the
-single enforcement point.
+- **Single responsibility.** It does exactly one thing — decide what a given viewer may see of
+  an item. No validation, no persistence, no status logic. One job.
+- **Open/closed.** If I add a new viewer relationship (say, "security officer"), I extend the
+  flags inside `public_item`; the endpoint and every consumer stay untouched.
+- **Liskov substitution.** Any viewer type produces a valid item projection. Consumers never
+  receive a shape they can't render — all flags are always present, booleans always defined.
+  (This sounds theoretical until you've had a grid go blank because a field was missing. I
+  have. Twice. See the week-10 defect log.)
+- **Interface segregation.** Consumers get only the flags they need (`viewer_is_reporter`,
+  `viewer_is_claimant`, `viewer_is_finder`, `viewer_is_rejected`, `found_reports_count`)
+  instead of the raw internal record with its `rejected_claimants` and `seeded` bookkeeping.
+- **Dependency inversion.** The API route depends on this abstraction, not on the storage
+  layout — which is why internal fields could be renamed during refactoring without breaking
+  the front-end or the tests.
 
-## 3. Wireframes (key screens)
+Evidence it works: the privacy test (`test_public_api_strips_private_fields`) verifies that an
+anonymous viewer receives zero private fields while a reporter sees their own. This function
+is the single enforcement point for the whole privacy story.
+
+## 3. Wireframes
 
 ### 3.1 Browse (home) — desktop
+
 ```
 +--------------------------------------------------------------------------+
 | [AF] AFIT Lost & Found Portal            Search...        [Sign in]      |
@@ -93,6 +108,7 @@ single enforcement point.
 ```
 
 ### 3.2 Browse — mobile (360 px)
+
 ```
 +---------------------------+
 | [AF] Portal        [in]   |
@@ -115,7 +131,8 @@ single enforcement point.
 +---------------------------+
 ```
 
-### 3.3 Report form (lost vs found differences)
+### 3.3 Report form (the lost/found differences)
+
 ```
 +----------------------------------------------+
 | Submit Lost or Found Property Report         |
@@ -134,6 +151,7 @@ single enforcement point.
 ```
 
 ### 3.4 Claim modal (found items)
+
 ```
 +----------------------------------------------+
 | Claim This Item: AFIT Student ID Card        |
@@ -148,6 +166,7 @@ single enforcement point.
 ```
 
 ### 3.5 Finder response + owner moderation (lost items)
+
 ```
 Finder card button:            Owner card:
 [ I Found This Item ]          Your report - 2 finder responses
@@ -163,6 +182,7 @@ Owner "View" panel:
 ```
 
 ### 3.6 Chat with unread indicator
+
 ```
 Card action row:  [Chat (.)<- red dot when unread]
 +---------------- Chat: Black School Bag ------+
@@ -174,10 +194,18 @@ Card action row:  [Chat (.)<- red dot when unread]
 +----------------------------------------------+
 ```
 
-## 4. UX decisions recorded
-- Institutional look: white header, emerald accents, no emoji icons (matches stakeholder feedback).
-- Contact details gated behind engagement (claim / finder response) to protect privacy while
-  keeping the reporting path friction-free.
-- Lost reporters get a lighter flow ("I Found This Item") because they are the victim, not the
-  verifier; found reporters get the ownership quiz because they hold the property.
-- Duplicate warning is non-blocking — it informs but never prevents a legitimate report.
+## 4. The UX decisions behind the wireframes
+
+A few choices I made consciously, with reasons:
+
+- **Institutional look.** White header, emerald accents, no emoji icons. Early feedback on my
+  first design was that it looked like a toy; the reference design I matched is what a campus
+  office would actually deploy.
+- **Contact details gated behind engagement.** Shown only after someone files a claim or a
+  finder response. This protects privacy without making reporting itself harder — the two
+  audiences have different needs, and the gate sits exactly between them.
+- **Lost reporters get the lighter flow.** "I Found This Item" is one click because the lost
+  reporter is the victim, not the verifier. Found reporters get the ownership quiz, because
+  they hold the property and bears the risk of handing it to the wrong person.
+- **The duplicate warning never blocks.** It informs. Two people really can lose the same
+  model of phone in the same week, and a hard block would turn them away.

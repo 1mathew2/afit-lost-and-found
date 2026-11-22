@@ -2,30 +2,42 @@
 
 **Deliverables:** architecture selection/justification, component diagram, ERD, schema script. **Marks: 8**
 
-## 1. Architecture Selection and Justification
+## 1. Choosing the architecture
 
-**Selected: Layered monolith with a REST API boundary (client–server).**
+I compared four candidates before committing, and I want to record why I said no to three of
+them, because the reasoning mattered more than the choice itself.
 
-| Candidate | Assessment |
-|-----------|-----------|
-| Microservices | 13-week single-developer project; operational overhead (service discovery, distributed deployment) outweighs benefits. Rejected. |
-| Event-driven | No high-volume async workloads; polling chat chosen deliberately for demo robustness. Rejected. |
-| Serverless | Vendor lock-in and cold starts complicate the class demo. Rejected. |
-| **Layered monolith + REST** | Clear separation (presentation / API / domain / persistence), one deployable, trivial to demo offline, and the persistence layer is swappable (file store now, PostgreSQL later). **Selected.** |
+**Microservices** — the obvious "modern" answer, and completely wrong for this project. I'm
+one developer with 13 weeks; splitting the system into services would have bought me
+distributed-systems problems (deployment, network failure, data consistency) in exchange for
+nothing I needed. Rejected.
 
-The front-end is a **single-page PWA** (vanilla JS, no framework) that talks to the backend
-only through the `/api/*` REST boundary — presentation and business logic are never mixed.
+**Event-driven** — nothing in this system has a genuinely high-volume asynchronous workload.
+I also chose polling over WebSockets for chat deliberately, for demo robustness, which removes
+most of what event-driven architecture would buy me. Rejected.
 
-## 2. Layers
+**Serverless** — vendor lock-in and cold starts make a live class demo nervy. I want the demo
+to run off my laptop with no cloud dependency. Rejected.
 
-| Layer | Implementation | Responsibility |
-|-------|----------------|----------------|
-| Presentation | `static/index.html`, `static/app.js`, Tailwind (CDN), service worker | Rendering, forms, polling, PWA shell |
+**Layered monolith with a REST boundary** — clear separation (presentation / API / domain /
+persistence), one deployable thing, trivial to demo offline, and the persistence layer is
+swappable when I want PostgreSQL later. **This is what I built.**
+
+The front-end is a **single-page PWA** in vanilla JavaScript (no framework) that talks to the
+backend *only* through the `/api/*` REST boundary. Presentation and business logic never mix —
+which sounds like a platitude until the week you refactor the server's data projection and
+realise the front-end didn't need to change.
+
+## 2. The layers
+
+| Layer | Where it lives | What it's responsible for |
+|-------|----------------|---------------------------|
+| Presentation | `static/index.html`, `static/app.js`, Tailwind (CDN), service worker | Rendering, forms, polling, the PWA shell |
 | API | FastAPI routes in `main.py` (`/api/*`) | Request validation, permission checks, status codes |
-| Domain | Item/Claim/Dispute/FoundReport/Conversation logic in `main.py` | Status lifecycle, anti-spam, thread resolution, similarity |
-| Persistence | `save_state()` / `load_state()` over `db.json`; `static/uploads/` for images | Durability across restarts |
+| Domain | Item/Claim/Dispute/FoundReport/Conversation logic in `main.py` | Status lifecycle, anti-spam, thread resolution, similarity matching |
+| Persistence | `save_state()` / `load_state()` over `db.json`; `static/uploads/` for images | Surviving restarts |
 
-## 3. Component Diagram
+## 3. Component diagram
 
 ```mermaid
 graph LR
@@ -54,10 +66,11 @@ graph LR
     SF -->|index.html, app.js, icons| SW
 ```
 
-## 4. ERD
+## 4. The ERD
 
-The file store is document-oriented, but the logical model is relational and maps 1:1 to the
-PostgreSQL schema in §6 (the Week-5 upgrade path).
+The file store is document-oriented, but I designed the logical model as if it were
+relational — on purpose. It means the PostgreSQL migration in §6 is a transcription exercise,
+not a redesign.
 
 ```mermaid
 erDiagram
@@ -138,26 +151,34 @@ erDiagram
     }
 ```
 
-**Key design decisions**
-- `CLAIM_DETAILS` is 1-to-0..1 with `ITEM` (only one active claim at a time); rejected claimants
-  are kept in `ITEM.rejected_claimants` (a multi-valued attribute that becomes a table in SQL).
-- Chat threads are keyed `itemId:partnerEmail` — the partner (non-reporter) identifies the
-  thread, so multiple finders of the same item never share messages.
-- `status` is an enum-style string; the lifecycle is enforced in the domain layer.
+Three design decisions worth explaining:
 
-## 5. Data Dictionary (abbreviated)
+- **`CLAIM_DETAILS` is 1-to-0..1 with `ITEM`.** Only one claim can be active on an item at a
+  time. Rejected claimants live in `ITEM.rejected_claimants` — a multi-valued attribute that
+  becomes its own table in the SQL version.
+- **Chat threads are keyed `itemId:partnerEmail`.** The non-reporter participant identifies the
+  thread. This is what guarantees that two finders of the same laptop can never see each
+  other's messages with the owner. I got this wrong the first time (one shared thread per
+  item) and the ERD is where I caught the fix.
+- **`status` is an enum-style string**, with the lifecycle enforced in the domain layer rather
+  than trusting the client.
+
+## 5. Data dictionary (the fields with rules)
 
 | Field | Type | Constraint |
 |-------|------|------------|
 | item.item_type | enum | `lost`, `found` |
 | item.status | enum | `Active`, `Claim Requested`, `Claimed/Returned`, `Closed` |
-| item.contact_email | email | format-validated; ownership identity; immutable after creation |
+| item.contact_email | email | format-validated; it's the ownership identity, so immutable after creation |
 | item.contact_phone | phone | `^(\+234|0)[789]\d{9}$` |
 | item.reporter_id | matric | `^(?=.*[A-Za-z])(?=.*\d)[A-Za-z0-9/-]{5,20}$` |
 | message.text | text | 1–1000 chars; ≤ 200 per thread |
 | user.password_hash | hex | SHA-256(salt ‖ password); salt = 16-byte `secrets.token_hex` |
 
-## 6. Schema Script (PostgreSQL upgrade path)
+## 6. Schema script (the PostgreSQL upgrade path)
+
+This is the schema I'd run if the file store were replaced tomorrow — every table maps
+directly from the ERD above:
 
 ```sql
 CREATE TABLE users (
@@ -246,3 +267,7 @@ CREATE TABLE messages (
 );
 CREATE INDEX idx_messages_thread ON messages(thread_key);
 ```
+
+The `UNIQUE (item_id, finder_email)` constraint on `found_reports` is the database-level
+version of the "no duplicate finder responses" rule — a nice example of the ERD catching a
+business rule I'd otherwise have to remember to enforce in code.

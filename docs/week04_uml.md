@@ -2,9 +2,9 @@
 
 **Deliverables:** use case, class, sequence (main flow) and activity diagrams. **Marks: 8**
 
-All diagrams are in Mermaid and render on GitHub/VS Code.
+All diagrams are in Mermaid, so they render directly on GitHub and in VS Code.
 
-## 1. Use Case Diagram
+## 1. Use case diagram
 
 ```mermaid
 graph TB
@@ -38,7 +38,11 @@ graph TB
     UC11 -.->|includes| UC12
 ```
 
-## 2. Class Diagram (domain + boundary entities)
+One thing worth pointing out to anyone reading this: the *Reporter* actor is not a separate
+kind of user — it's any student once they've filed a report. Modelling it as its own actor
+made the diagram much clearer than trying to draw every permission on the Student actor.
+
+## 2. Class diagram (domain + boundary entities)
 
 ```mermaid
 classDiagram
@@ -128,11 +132,14 @@ classDiagram
     PortalAPI "1" o-- "0..*" User
 ```
 
-Status lifecycle of `Item`: `Active → Claim Requested → (Claimed/Returned | Active)`; a lost
-item can also be resolved by the reporter: `Active → Claimed/Returned (marked found)` or
-`Active → Closed`.
+The status lifecycle on `Item` is the heart of the model:
+`Active → Claim Requested → (Claimed/Returned | Active)`. A lost item can also be resolved
+directly by its reporter: `Active → Claimed/Returned` (marked found) or `Active → Closed`.
 
-## 3. Sequence Diagram — Main Flow (claim and return of a found item)
+## 3. Sequence diagram — the main flow (claiming and returning a found item)
+
+I picked this as "the" main flow because it's the one that exercises the most of the system:
+two users, a state transition, validation, chat and a permission check all in one path.
 
 ```mermaid
 sequenceDiagram
@@ -165,7 +172,10 @@ sequenceDiagram
     Note over Claimant,Reporter: Reject path: POST .../reject-claim → status Active, claimant banned for this item
 ```
 
-## 4. Sequence Diagram — Finder Response Flow (lost items)
+## 4. Sequence diagram — the finder response flow (lost items)
+
+The mirror flow for lost reports, where the roles are reversed — now the *finder* comes to
+the owner, and the owner holds all the decision power:
 
 ```mermaid
 sequenceDiagram
@@ -182,7 +192,7 @@ sequenceDiagram
     API-->>Owner: status = Claimed/Returned, "Returned by <finder>"
 ```
 
-## 5. Activity Diagram — Report Submission with Validation and Duplicate Warning
+## 5. Activity diagram — report submission with validation and the duplicate warning
 
 ```mermaid
 flowchart TD
@@ -206,7 +216,10 @@ flowchart TD
     O --> P[Browse grid refreshes]
 ```
 
-## 6. Activity Diagram — Claim Resolution with Disputes
+Note the duplicate warning is deliberately *non-blocking* — it informs, it doesn't prevent.
+Two people genuinely can lose the same model of phone in the same week.
+
+## 6. Activity diagram — claim resolution with disputes
 
 ```mermaid
 flowchart TD
@@ -223,3 +236,12 @@ flowchart TD
     E --> Z
     I --> Z
 ```
+
+## 7. What drawing these taught me
+
+Two things I only noticed once I had to draw them. First, the claim flow and the finder
+response flow are near-mirrors of each other — seeing that on paper is why I built them as
+separate-but-symmetric features rather than forcing one form to do both jobs. Second, every
+diagram kept funneling through the reporter as the decision-maker, which confirmed the
+design instinct that the reporter (owner or holder) should always be the one who closes a
+report. Neither of those was obvious to me in week 2.
