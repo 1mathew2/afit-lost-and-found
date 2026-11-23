@@ -406,7 +406,7 @@ kicker(s, "Modelling  \u00b7  sequence diagram")
 title(s, "Sequence diagram: a claim, then a confirmed return")
 
 lanes = [(1.6, "Student\nclaimant, then reporter"), (5.0, "PWA\napp.js"),
-         (8.4, "API\nmain.py"), (11.7, "db.json")]
+         (8.4, "FastAPI\nmain.py"), (11.7, "db.json")]
 for x, name in lanes:
     lifeline(s, x, name)
 
@@ -444,13 +444,14 @@ s = slide()
 kicker(s, "Architecture")
 title(s, "A layered monolith, on purpose")
 table(s, [["Layer", "Responsibility"],
-          ["Presentation", "Installable app: one page, one script, one service worker"],
-          ["API", "Twenty-two endpoints: validation, permissions, status changes"],
+          ["Presentation", "PWA: one HTML page, vanilla JavaScript, a service worker"],
+          ["API  (FastAPI + Uvicorn)", "22 REST endpoints: validation, permissions, status changes"],
           ["Domain", "Claim lifecycle, spam limits, thread resolution"],
-          ["Persistence", "Save and load to a JSON file"]],
-      widths=[2.6, 8.7], size=18, row_h=0.72)
+          ["Persistence", "The json module: one file, written on every change"],
+          ["Built with", "Python 3 \u00b7 FastAPI \u00b7 Uvicorn \u00b7 vanilla JavaScript \u00b7 JSON \u00b7 GitHub Actions \u00b7 Render"]],
+      widths=[3.5, 7.8], size=17, row_h=0.62)
 headline(s, "Microservices and serverless were rejected: one developer, thirteen weeks, offline demonstrations.",
-         size=19, y=6.1)
+         size=18, y=6.4)
 NOTES.append("Four layers. I rejected microservices, serverless and a single-file script, all for the same "
              "reason: one developer, thirteen weeks, and demonstrations that have to work on a phone with poor "
              "Wi-Fi. The layer boundary is what later let me move the whole interface out of the backend file in "
