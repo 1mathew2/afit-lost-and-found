@@ -4,6 +4,10 @@ from pptx.util import Inches, Pt
 from pptx.dml.color import RGBColor
 from pptx.enum.text import PP_ALIGN
 
+from pptx.enum.shapes import MSO_CONNECTOR
+from pptx.enum.dml import MSO_LINE
+from pptx.oxml.ns import qn
+
 NAVY = RGBColor(0x14, 0x1C, 0x2B)
 EMERALD = RGBColor(0x04, 0x6B, 0x4E)
 GREY = RGBColor(0x55, 0x5D, 0x6B)
@@ -124,6 +128,49 @@ def table(s, rows, widths, y=2.4, size=16, row_h=0.56, head_h=0.6, x=L, w=W):
 
 
 NOTES = []
+
+
+def lifeline(s, x, name, y0=2.3, y1=6.95):
+    head = s.shapes.add_shape(1, Inches(x - 1.0), Inches(y0), Inches(2.0), Inches(0.62))
+    head.fill.solid()
+    head.fill.fore_color.rgb = NAVY
+    head.line.fill.background()
+    head.shadow.inherit = False
+    tf = head.text_frame
+    tf.word_wrap = True
+    for i, part in enumerate(name.split("\n")):
+        p = tf.paragraphs[0] if i == 0 else tf.add_paragraph()
+        p.alignment = PP_ALIGN.CENTER
+        r = p.add_run()
+        r.text = part
+        r.font.size, r.font.name, r.font.bold = Pt(12), BODY, True
+        r.font.color.rgb = WHITE
+    line = s.shapes.add_connector(MSO_CONNECTOR.STRAIGHT, Inches(x), Inches(y0 + 0.62),
+                                  Inches(x), Inches(y1))
+    line.line.color.rgb = GREY
+    line.line.width = Pt(1)
+    line.line.dash_style = MSO_LINE.DASH
+
+
+def msg(s, x1, x2, y, label, dashed=False, size=11.5):
+    con = s.shapes.add_connector(MSO_CONNECTOR.STRAIGHT, Inches(x1), Inches(y), Inches(x2), Inches(y))
+    con.line.color.rgb = NAVY
+    con.line.width = Pt(1.25)
+    if dashed:
+        con.line.dash_style = MSO_LINE.DASH
+    ln = con.line._get_or_add_ln()
+    ln.append(ln.makeelement(qn("a:tailEnd"), {"type": "triangle", "w": "med", "len": "med"}))
+    left, width = min(x1, x2), abs(x2 - x1)
+    tb = s.shapes.add_textbox(Inches(left), Inches(y - 0.33), Inches(width), Inches(0.3))
+    tf = tb.text_frame
+    tf.word_wrap = False
+    p = tf.paragraphs[0]
+    p.alignment = PP_ALIGN.CENTER
+    r = p.add_run()
+    r.text = label
+    r.font.size, r.font.name = Pt(size), BODY
+    r.font.color.rgb = NAVY
+
 
 # ---------------------------------------------------------------- 1 title
 s = slide()
@@ -353,6 +400,45 @@ NOTES.append("Four actors and thirteen use cases. The right-hand column is the s
              "spine of the design - every business rule in the system is a rule about which transition is allowed, "
              "and which user is allowed to make it.")
 
+# ---------------------------------------------------------------- 13 sequence
+s = slide()
+kicker(s, "Modelling  \u00b7  sequence diagram")
+title(s, "Sequence diagram: a claim, then a confirmed return")
+
+lanes = [(1.6, "Student\nclaimant, then reporter"), (5.0, "PWA\napp.js"),
+         (8.4, "API\nmain.py"), (11.7, "db.json")]
+for x, name in lanes:
+    lifeline(s, x, name)
+
+rows = [
+    (1.6, 5.0, "submits a claim, with proof", False),
+    (5.0, 8.4, "POST /items/12/claim", False),
+    (8.4, 11.7, "save claim \u00b7 status = Claim Requested", False),
+    (8.4, 5.0, "accepted, private chat opens", True),
+    (1.6, 5.0, "reporter confirms the return", False),
+    (5.0, 8.4, "POST /confirm-return", False),
+    (8.4, 11.7, "status = Claimed / Returned", False),
+    (8.4, 5.0, "item updated", True),
+]
+y = 3.42
+for a, b, lbl, dash in rows:
+    msg(s, a, b, y, lbl, dashed=dash)
+    y += 0.45
+
+tb = s.shapes.add_textbox(Inches(L), Inches(6.95), Inches(W), Inches(0.4))
+tf = tb.text_frame
+tf.word_wrap = True
+p = tf.paragraphs[0]
+r = p.add_run()
+r.text = ("Before anything is saved the API re-checks: the item is still Active, the claimant is not "
+          "the reporter, the claimant was never rejected, and every detail passes validation.")
+r.font.size, r.font.name = Pt(13), BODY
+r.font.color.rgb = GREY
+NOTES.append("This is the sequence diagram for the flow that carries the most marks. The claimant submits proof, "
+             "the API saves the claim and moves the item to Claim Requested, chat opens between exactly those two "
+             "people, and only the reporter can confirm the return. Note the guard before the save: still active, not "
+             "the reporter, never rejected before, details valid.")
+
 # ---------------------------------------------------------------- 13 architecture
 s = slide()
 kicker(s, "Architecture")
@@ -489,10 +575,13 @@ NOTES.append("Thank you. The system is live at that address, so I am happy to ta
 for sl, note in zip(prs.slides, NOTES):
     sl.notes_slide.notes_text_frame.text = note
 
-OUT = "AFIT_SP014_Presentation_FINAL.pptx"
-try:
-    prs.save(OUT)
-except PermissionError:
-    OUT = "AFIT_SP014_Presentation_FINAL_v2.pptx"
-    prs.save(OUT)
+OUT = None
+for name in ("AFIT_SP014_Presentation_FINAL.pptx", "AFIT_SP014_Presentation_FINAL_v2.pptx",
+             "AFIT_SP014_Presentation_FINAL_v3.pptx"):
+    try:
+        prs.save(name)
+        OUT = name
+        break
+    except PermissionError:
+        continue
 print(f"Saved {OUT} - {len(prs.slides._sldIdLst)} slides, notes on all")
