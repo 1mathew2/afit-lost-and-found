@@ -3,10 +3,9 @@
 > **For a fresh agent session:** read this file first. Current state: app complete and deployed
 > at https://afit-lost-and-found.onrender.com (Render free tier, auto-deploys on push to
 > github.com/1mathew2/afit-lost-and-found). Docs package W1–W13 complete in `docs/`.
-> Slides: `AFIT_Lost_and_Found_Presentation_v2.pptx` (13 slides). Open items: confirm the
-> reporter name spelling ("Mathew Umama" was derived from the email), course submission format
-> (docs are Markdown — convert to PDF/DOCX if required), and one full rehearsal of the demo flow
-> on the cloud URL.
+> Slides: `AFIT_Lost_and_Found_Presentation_v2.pptx` (13 slides). Name spelling confirmed
+> (Mathew Umama). Open items: course submission format (docs are Markdown — convert to
+> PDF/DOCX if required), and one full rehearsal of the demo flow on the cloud URL.
 
 ## Tonight / before leaving
 - [x] Cloud deployment live: https://afit-lost-and-found.onrender.com (verified: portal, API, seeds)

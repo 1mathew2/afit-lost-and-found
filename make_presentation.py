@@ -111,8 +111,9 @@ box(s, 0, 3.55, 13.333, 0.07, fill=EMERALD)
 text(s, 1.2, 1.6, 11, 0.5, "SP-014  ·  SOFTWARE ENGINEERING COURSE PROJECT", size=20, color=EMERALD, bold=True)
 text(s, 1.2, 2.15, 11, 1.4, "AFIT Lost & Found Portal", size=60, color=WHITE, bold=True)
 text(s, 1.2, 3.8, 11, 0.6, "Report it. Search it. Recover it.", size=28, color=RGBColor(0x9C, 0xA3, 0xAF))
-text(s, 1.2, 5.1, 11, 1.2, [
-    "Mathew Umama  ·  U23CS1067  ·  1mathewumama@gmail.com",
+text(s, 1.2, 5.1, 11, 1.7, [
+    "Mathew Umama  ·  U23CS1067",
+    "CSC 403  ·  Computer Science",
     "Final presentation — single-person project",
 ], size=21, color=WHITE, space_after=6)
 
@@ -398,8 +399,9 @@ text(s, 1.2, 2.2, 11, 1.1, "Thank you", size=54, color=WHITE, bold=True)
 text(s, 1.2, 3.75, 11, 0.6, "Questions?", size=30, color=RGBColor(0x9C, 0xA3, 0xAF))
 text(s, 1.2, 5.0, 11, 0.6, "Future work: session tokens · PBKDF2 · PostgreSQL · notifications · admin dashboard",
      size=19, color=EMERALD, bold=True)
-text(s, 1.2, 5.9, 11, 1.0, [
-    "Mathew Umama  ·  U23CS1067  ·  1mathewumama@gmail.com",
+text(s, 1.2, 5.9, 11, 1.4, [
+    "Mathew Umama  ·  U23CS1067  ·  Computer Science",
+    "CSC 403",
     "Live demo available on request — the portal runs from a single command.",
 ], size=19, color=WHITE, space_after=6)
 
