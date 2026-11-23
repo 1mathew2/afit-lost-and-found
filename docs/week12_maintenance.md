@@ -130,6 +130,7 @@ removes the report permanently.
 | Defects found / open | 10 / **0 open** | the week-10 defect log |
 | Effort | ≈ 54 h against a 50 h estimate | +8 % |
 | Schedule | feature-complete a week early (W8 vs W9) | the headroom went to testing and security |
+| Deployment | live at `https://afit-lost-and-found.onrender.com` | Render free tier, auto-deploys on push |
 
 The metric I'd point an examiner at is the last two rows together: I finished the features
 early and spent the surplus on testing and security, and the defect log shows that trade

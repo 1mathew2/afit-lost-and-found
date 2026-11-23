@@ -20,6 +20,7 @@ moderation and security steps. What the delivered system can do:
 | Server-enforced permissions and a privacy projection | ✔ |
 | Anti-spam limits and an input validation gate | ✔ |
 | 28 automated tests, 84 % coverage, a CI pipeline | ✔ |
+| **Deployed to a public HTTPS URL, auto-deploys from the repo** | ✔ |
 
 ## 2. Final report
 
@@ -52,7 +53,8 @@ I'd rather an examiner hear these from me than find them:
 1. **Identity is email-string based** (no session tokens). Acceptable for the class demo and
    fully analysed in the week-11 STRIDE model; token auth is the first v1.1 item.
 2. Passwords use salted SHA-256 rather than a proper KDF, and there's no login rate limiting.
-3. `db.json` has no concurrent-write locking — the single-process assumption.
+3. `db.json` has no concurrent-write locking — the single-process assumption — and on the free
+   hosting tier the disk is ephemeral, so data resets to seeds when the service wakes from sleep.
 4. Email/SMS notifications are not implemented (CR-001, deferred with an alternative shipped).
 
 ### 2.5 Future work (v1.1)
@@ -115,3 +117,4 @@ they fix review findings?)*
 - [x] Peer assessment template (§4)
 - [x] Complete documentation package W1–W13 in `docs/`
 - [x] Repository with Git history and CI configuration
+- [x] Live deployment: `https://afit-lost-and-found.onrender.com` (Render blueprint, auto-deploys on push)

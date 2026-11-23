@@ -80,15 +80,36 @@ jobs:
 Every push runs the syntax checks and the full 28-test suite with an 80 % coverage gate —
 the same gate the project passes locally at 84 %.
 
-## 4. Deployment (test environment)
+## 4. Deployment
 
-- **Target:** the campus-demo laptop plus a phone on the same Wi-Fi. This is the v1.0 test
-  environment, and I'm calling it that rather than pretending it's production.
-- **Run:** `python -m uvicorn main:app --host 0.0.0.0 --port 8000` — reachable from the phone
-  at `http://<laptop-ip>:8000`, where the PWA installs to the home screen.
-- **Production hardening checklist** (documented for the final report): run behind
-  `nginx`/`caddy` with TLS, serve with `--workers 2` after moving the store to PostgreSQL
-  (schema ready in week 5 §6), add session tokens (S1), login rate limiting (S2), and per-IP
-  limits (D1).
-- **Demo reset procedure:** stop the server → delete `db.json` → restart. The seeds reload
-  from code, so a clean demo state is always one command away.
+The portal is deployed to production, not just a test laptop. After comparing options, I chose
+**Render's free web-service tier** over alternatives:
+
+- **Why Render:** permanent public HTTPS URL on the free plan, no credit card, deploys straight
+  from the GitHub repo, and the free tier's quirks (sleep, ephemeral disk) are acceptable for a
+  campus demo. A named Cloudflare tunnel needed a paid domain; keeping the laptop as the server
+  would make the app unreachable whenever my machine is off.
+- **How it deploys:** `render.yaml` in the repo root is a Blueprint — Render installs
+  `requirements.txt` and runs `uvicorn main:app --host 0.0.0.0 --port $PORT`. The health check is
+  `GET /api/items`. Every push to `main` redeploys automatically, so the deployed build always
+  matches the repository.
+- **Live URL:** `https://afit-lost-and-found.onrender.com`
+- **Verified post-deploy:** portal, API, manifest, service worker and icons all return 200; the
+  11 seed items load; and the privacy sanitizer works on the deployed instance (anonymous API
+  responses contain no contact fields).
+- **Because it is HTTPS**, the PWA now installs fully on phones (Android "Install app" /
+  iOS "Add to Home Screen") with the offline service-worker shell — over plain-HTTP LAN links
+  browsers refuse full installation, which the tunnel sharing phase made obvious.
+
+**Free-tier limitations, stated honestly:**
+1. The service sleeps after ~15 minutes without visitors; the first request afterwards waits
+   ~30–60 s while it wakes. For demos I open the link a minute early.
+2. The disk is ephemeral: on wake, `db.json` and `static/uploads/` reset, so the portal returns
+   to its 11 seed items. For a demo this doubles as a clean-state guarantee, but it also means
+   user data is not durable in production — the first real fix would be Render's paid persistent
+   disk or the PostgreSQL migration (§6 in week 5).
+
+**Production hardening checklist (beyond the free tier):** session tokens (S1), login rate
+limiting (S2), per-IP limits (D1), persistent storage or PostgreSQL, and monitoring/uptime
+alerts. The deployment command, blueprint and CI gate are already in the repository, so each of
+these is an increment, not a rebuild.
