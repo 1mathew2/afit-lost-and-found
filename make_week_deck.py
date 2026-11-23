@@ -232,5 +232,80 @@ text(s, 1.2, 3.75, 11, 2.0, [
 text(s, 1.2, 6.3, 11, 0.5, "Mathew Umama  \u00b7  U23CS1067  \u00b7  Computer Science  \u00b7  CSC 403",
      size=16, color=RGBColor(0x9C, 0xA3, 0xAF))
 
-prs.save("AFIT_SP014_Weekly_Tasks_Slides.pptx")
-print(f"Saved AFIT_SP014_Weekly_Tasks_Slides.pptx with {len(prs.slides._sldIdLst)} slides")
+NOTES = [
+    "This deck walks through the thirteen weeks of the course, one slide per week: the task I was "
+    "given, and what I actually delivered against it. Thirteen weeks, one hundred marks.",
+    # W1
+    "Week one: the proposal. I was asked to propose a project, justify a process model, and set up a "
+    "repository. I delivered the proposal with the problem, four stakeholder groups, six SMART "
+    "objectives and an explicit out-of-scope list, justified the incremental model against waterfall, "
+    "prototyping and Scrum, and initialised the Git repository.",
+    # W2
+    "Week two: requirements engineering. The task was SRS sections one to three plus user stories with "
+    "acceptance criteria. I wrote fourteen functional and eight non-functional requirements, numbered "
+    "so they could be traced to tests later, and eight user stories whose acceptance criteria I could "
+    "actually test in week ten.",
+    # W3
+    "Week three: validation and planning. I validated my own requirements and that exercise cut two "
+    "requirements outright - email notifications and an admin dashboard. Then MoSCoW prioritisation, "
+    "estimates against actuals, the thirteen-week schedule, and a scored risk register. Two of those "
+    "risks, scope creep and the stale-browser problem, actually happened later.",
+    # W4
+    "Week four: UML modelling. Use case diagram with four actors and thirteen use cases, the domain "
+    "class model with the item status lifecycle, two sequence diagrams for the two mirrored flows, "
+    "and two activity diagrams. All in Mermaid, so they render directly on GitHub.",
+    # W5
+    "Week five: architecture and database design. I justified a layered monolith over three "
+    "alternatives, produced the component diagram, the ERD, and a full PostgreSQL schema as the "
+    "migration path. That schema has seven tables and is a direct transcription of the ERD.",
+    # W6
+    "Week six: design patterns and UI. Four patterns - Repository, Strategy, Facade and Observer - "
+    "plus six wireframes including the mobile layout, and a SOLID analysis of the privacy module, "
+    "public_item, which is the piece of the system I am most confident defends itself on every "
+    "principle.",
+    # W7
+    "Week seven: implementation one. The task was a coding standard, the first core module, and "
+    "proper version control. I delivered a nine-rule standard, the complete reporting and browse "
+    "module, and a branch workflow with a merge checklist that requires a permission-negative test "
+    "for every new behaviour.",
+    # W8
+    "Week eight: the mid-semester prototype demo. Twelve steps, about seven minutes, with an offline "
+    "fallback path rehearsed. At this point I was ahead of schedule - chat and disputes were already "
+    "working - and the three questions the audience asked went straight into the backlog.",
+    # W9
+    "Week nine: implementation two and code quality. Six more modules, a peer review log with ten "
+    "findings of which four were high severity and all were fixed, six refactors including extracting "
+    "the entire UI out of the backend file, and a static analysis pass that came back clean.",
+    # W10
+    "Week ten: testing. Twenty-eight automated tests, eighty-four percent line coverage against an "
+    "eighty percent gate, twenty-three documented test cases, and a defect log of ten defects with "
+    "correct root causes and zero still open.",
+    # W11
+    "Week eleven: security and DevOps. A twelve-entry STRIDE threat model with honest residual risks, "
+    "an OWASP Top Ten table where the partials are marked as partial rather than rounded up, a GitHub "
+    "Actions pipeline with a coverage gate, and a real deployment that redeploys automatically on "
+    "every push.",
+    # W12
+    "Week twelve: maintenance and metrics. I processed change request CR-001 properly - impact "
+    "analysis, decision to defer email notifications while shipping the in-app alternative - wrote "
+    "the eight-section user manual, and reported twelve metrics including effort variance.",
+    # W13
+    "Week thirteen: the final demonstration, report and reflection. The capability checklist covers "
+    "twelve items, the final report states four known limitations plainly instead of hiding them, "
+    "and the reflection is built around the four lessons the defect log taught me.",
+    # close
+    "So: one hundred marks across thirteen increments, and the through-line is the same every week - "
+    "each week produced something runnable, reviewable or measurable, never just paperwork. Thank you.",
+]
+
+for sl, note in zip(prs.slides, NOTES):
+    sl.notes_slide.notes_text_frame.text = note
+
+OUT = "AFIT_SP014_Weekly_Tasks_Slides.pptx"
+try:
+    prs.save(OUT)
+except PermissionError:
+    OUT = "AFIT_SP014_Weekly_Tasks_Slides_v2.pptx"
+    prs.save(OUT)
+    print("(original was open in PowerPoint - saved under a v2 name instead)")
+print(f"Saved {OUT} with {len(prs.slides._sldIdLst)} slides and speaker notes")

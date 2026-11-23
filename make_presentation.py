@@ -405,5 +405,122 @@ text(s, 1.2, 5.9, 11, 1.4, [
     "Live demo available on request — the portal runs from a single command.",
 ], size=19, color=WHITE, space_after=6)
 
+NOTES = [
+    # 1 title
+    "Good morning. My name is Mathew Umama, matric number U23CS1067, Computer Science, CSC 403. "
+    "My project is the AFIT Lost & Found Portal: a web application that connects students who lose "
+    "property on campus with the people who find it. I built this alone over the thirteen weeks of "
+    "this course, and it is deployed and running on the internet right now - not a mock-up.",
+    # 2 problem
+    "I want to start with why this problem exists. When you lose something on this campus, the only "
+    "channels you have are informal ones. Notice boards that nobody checks, where last week's poster "
+    "looks exactly like today's. WhatsApp groups where your message is buried within two days and "
+    "you cannot search back through months of history. And a paper log at the security post that "
+    "students are not allowed to search. The result is that items are handed in honestly and still "
+    "never get claimed - not because people are dishonest, but because the finder and the owner "
+    "never meet in the middle. That gap is the problem I chose to solve.",
+    # 3 objectives and scope
+    "I set six SMART objectives: report an item in under two minutes, search and filter across all "
+    "reports, a verified claim-and-return workflow for found items, a lighter finder-response flow "
+    "for lost items with private chat, an auditable trail of claims and disputes, and delivery as an "
+    "installable mobile app. Then scope discipline. In scope: reporting, search, claims, chat, "
+    "disputes, moderation, accounts, validation and anti-spam. Deliberately out of scope: email "
+    "servers, payments, student-record integration, native apps and image recognition. Writing that "
+    "second list down in week one was not paperwork - it stopped me twice later when I was tempted "
+    "to add things I did not have time for.",
+    # 4 process model
+    "I chose the incremental model, and I want to justify that against the alternatives, because the "
+    "choice shaped the whole project. Waterfall was tempting since the requirements felt clear, but "
+    "it only gives you feedback at the very end - too late to act on it. Pure prototyping would have "
+    "thrown away effort on flows that are already well understood. Scrum was the strongest rival, "
+    "but this course is organised as thirteen graded weekly deliverables, not sprints, so it would "
+    "have meant double bookkeeping. The payoff of incremental was concrete: the system was runnable "
+    "at the end of every single week, and the feedback I got at the week eight demo went straight "
+    "into weeks nine to thirteen without rewriting the core.",
+    # 5 requirements
+    "Week two was requirements engineering. I identified four stakeholder groups: students who lose "
+    "things, finders, security and hall wardens, and student affairs. I gathered requirements by "
+    "interviewing classmates - and the honest answer to 'what do you do when you lose something' "
+    "was almost always 'post it in the class WhatsApp group and pray'. The interesting finding was "
+    "a tension: finders want a light process, owners want verification. My whole design resolves "
+    "that tension - lost reports get the light flow, found reports get the ownership quiz. Then I "
+    "prioritised with MoSCoW. The 'will not have' row turned out to be the most useful one in the "
+    "table.",
+    # 6 UML
+    "Week four, the UML models. The use case diagram has four actors and thirteen use cases. One "
+    "modelling decision worth pointing out: 'Reporter' is not a separate kind of user - it is any "
+    "student once they have filed a report. Modelling it separately made every permission rule in "
+    "the system easier to state. The class diagram gives the domain model, and the heart of it is "
+    "the status lifecycle: Active, then Claim Requested, then Claimed or Returned - with the reject "
+    "path going back to Active. I drew two sequence diagrams because the system has two mirrored "
+    "flows: found items get claimed with proof of ownership, and lost items get finder responses "
+    "where the owner does the verifying.",
+    # 7 architecture
+    "Week five, architecture. I evaluated four candidates and rejected three. Microservices buy you "
+    "distributed systems problems in exchange for benefits I did not need as one developer in "
+    "thirteen weeks. Event-driven did not fit because I deliberately chose polling over WebSockets. "
+    "Serverless would have made a live demo depend on cold starts and a vendor. So: a layered "
+    "monolith with a REST boundary - presentation, API, domain and persistence. The important part "
+    "is the boundary: the front end talks only to slash A P I, which is why I could restructure the "
+    "internals repeatedly later without touching the interface.",
+    # 8 database
+    "Week five also covered the data design. One deliberate decision: I designed the ERD as if it "
+    "were relational, even though the storage is a JSON file - so the PostgreSQL migration in the "
+    "documentation is a transcription, not a redesign. Three decisions worth explaining. Claim "
+    "details are one-to-zero-or-one with an item, because only one claim can be active at a time. "
+    "Chat threads are keyed on item I D plus the partner's email - and that is exactly what prevents "
+    "two finders of the same laptop from seeing each other's messages, which was a real bug I later "
+    "found and fixed. And status is an enum-style field enforced in the domain layer, never trusted "
+    "from the client.",
+    # 9 patterns + SOLID
+    "Week six, design patterns and the SOLID module. I will be honest about the process: I did not "
+    "sit down and decide which patterns to apply. I built the system, recognised the patterns that "
+    "had emerged, and then named them so they stayed consistent. Repository - all reads and writes "
+    "go through two functions, so swapping the storage is one layer. Strategy - the privacy "
+    "projection decides what a viewer may see based on their relationship to the item. Facade - the "
+    "front end touches domain logic only through REST. Observer - unread indicators work by polling. "
+    "Then my SOLID-compliant module: public_item. One responsibility, extensible to new viewer "
+    "roles, always returns a valid projection, hides internal fields, and shields the routes from "
+    "the storage layout. One test proves it holds.",
+    # 10 implementation
+    "Week seven, the first working module: report, validate, browse, search. Three rules from the "
+    "coding standard that mattered most. Every endpoint docstring states its permission rule, so the "
+    "permission matrix stays visible. Every mutation ends by saving state, which is the durability "
+    "invariant. And every user-supplied string is escaped before rendering, which is the X S S "
+    "defence. On version control: feature branches, merged only when that module's tests pass, with "
+    "a merge rule that every new behaviour needs a positive test AND a permission-negative test. "
+    "That second half is the rule that later caught a missing permission check before the demo, not "
+    "after it.",
+    # 11 testing + security
+    "Weeks ten and eleven together, because they tell the same story. Twenty-eight automated tests, "
+    "eighty-four percent line coverage against an eighty percent gate, and ten defects found with "
+    "zero still open. The most valuable tests are not the happy paths - they are the nine that "
+    "assert the wrong user receives a four-oh-three. Without those, the permission matrix is a claim; "
+    "with them, it is evidence. On security: four real fixes - upload path traversal, contact details "
+    "leaking through the API even when the UI hid them, an unauthenticated confirm-return endpoint, "
+    "and missing spam limits. And two things I accepted openly rather than hiding: identity is an "
+    "email string rather than a session token, and passwords use salted SHA-256 rather than a proper "
+    "key-derivation function. Both are analysed in the STRIDE model, and token-based sessions are the "
+    "first item on the v1.1 list.",
+    # 12 metrics + reflection
+    "The numbers: about five hundred and thirty lines of backend, seventeen REST endpoints all "
+    "permission-checked, twenty-eight tests, eighty-four percent coverage, fifty-four hours of effort "
+    "against a fifty-hour estimate. But the number I care about is the last one - features finished a "
+    "week early, and I spent that surplus on testing and security, which is why the defect log ends "
+    "at zero open. And the lesson behind all of it: four separate bugs - a shared chat thread, finders "
+    "locked out of chat, and two blank grids - were all the same species. The client assumed something "
+    "about the server's payload that was not true. The fix class was always the same: the server "
+    "decides what exists, the client renders what it is given.",
+    # 13 close
+    "To close: the AFIT Lost & Found Portal replaces notice boards and WhatsApp threads with one "
+    "searchable system, it is deployed and installable on a phone, and every claim, dispute and "
+    "resolution leaves an audit trail. The future work is honest and specific: session tokens, proper "
+    "password hashing, the PostgreSQL migration, and notifications. Thank you - I am happy to take "
+    "questions, and I can demonstrate the live app on my phone if you would like to see it working.",
+]
+
+for sl, note in zip(prs.slides, NOTES):
+    sl.notes_slide.notes_text_frame.text = note
+
 prs.save("AFIT_Lost_and_Found_Presentation_v2.pptx")
-print(f"Saved with {len(prs.slides._sldIdLst)} slides")
+print(f"Saved with {len(prs.slides._sldIdLst)} slides and speaker notes")
