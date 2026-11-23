@@ -237,22 +237,6 @@ NOTES.append("I chose incremental. Waterfall would have given me no feedback unt
              "screens you throw away. Scrum assumes a team and adds bookkeeping on top of the weekly deliverables. "
              "Incremental gave me something runnable every single week.")
 
-# ---------------------------------------------------------------- 6 plan
-s = slide()
-kicker(s, "Plan")
-title(s, "Thirteen weeks, thirteen checkpoints")
-table(s, [["Weeks", "What was produced"],
-          ["1 - 2", "Proposal, requirements specification, user stories"],
-          ["3", "Validation, MoSCoW, schedule, risk register"],
-          ["4 - 6", "UML models, architecture, database, design, wireframes"],
-          ["7 - 8", "Working module one, prototype demonstration"],
-          ["9 - 10", "Remaining modules, code review, test suite"],
-          ["11 - 12", "Security, CI pipeline, deployment, user manual"],
-          ["13", "Final report and demonstration"]],
-      widths=[1.8, 9.5], size=18, row_h=0.58)
-NOTES.append("The thirteen-week baseline. I estimated fifty hours of work and spent fifty-four - eight percent "
-             "over - and the two features that caused the overrun were evidence validation and the chat threading.")
-
 # ---------------------------------------------------------------- 7 FR 1
 s = slide()
 kicker(s, "Requirements  \u00b7  1 of 2")
@@ -291,18 +275,18 @@ NOTES.append("FR-8 to FR-14 cover chat, disputes, moderation, accounts, anti-spa
 s = slide()
 kicker(s, "Requirements")
 title(s, "Non-functional requirements")
-table(s, [["Requirement", "Measurable target"],
-          ["Usability", "Report in under two minutes; usable at 360 px wide"],
-          ["Performance", "Search results in under a second over 1,000 items"],
-          ["Security", "Passwords salted and hashed; images capped at 5 MB"],
-          ["Reliability", "Every change written to disk immediately"],
-          ["Availability", "The page still opens offline once installed"],
-          ["Maintainability", "28 automated tests, 84 percent coverage"],
-          ["Privacy", "Contacts hidden until a claim or response exists"]],
-      widths=[3.0, 8.3], size=17, row_h=0.5)
-NOTES.append("Eight non-functional requirements, and each one has a number attached, because a requirement you "
-             "cannot measure is an opinion. The security and reliability rows are the two I can demonstrate: five "
-             "megabyte image cap, and a disk write on every mutation.")
+table(s, [["Requirement", "Measurable target", "How it was verified"],
+          ["Usability", "Report filed in under 2 minutes; no sideways scroll at 360 px", "Timed in the week-8 demo"],
+          ["Performance", "Item list returns in under 300 ms with 1,000 items", "Load test, week 10"],
+          ["Security", "Salted hashes; uploads capped at 5 MB, 4 image types only", "Tests T-20 and T-21"],
+          ["Reliability", "No data lost across a restart: written on every change", "Restart test, week 10"],
+          ["Availability", "The shell still opens offline after one visit", "Chrome offline mode"],
+          ["Maintainability", "28 tests, 84 % line coverage, CI fails below 80 %", "GitHub Actions run"],
+          ["Privacy", "Contact details hidden for every non-participant", "Test T-18 asserts it"]],
+      widths=[2.35, 5.9, 3.3], size=15.5, row_h=0.56)
+NOTES.append("Eight non-functional requirements, and every one has a number and a way of checking it. That is the "
+             "fix for the vague version I wrote in week two: if I cannot name the number and the test, it is an "
+             "opinion, not a requirement.")
 
 # ---------------------------------------------------------------- 10 stories
 s = slide()
@@ -322,17 +306,20 @@ NOTES.append("Every acceptance criterion here became an automated test in week t
 s = slide()
 kicker(s, "Risk management")
 title(s, "Six risks I actively managed")
-table(s, [["ID", "Risk", "P x I", "Response"],
-          ["R1", "Scope creep", "9", "MoSCoW plus a binding will-not-have list"],
-          ["R2", "Data loss in a file store", "6", "Save to disk on every mutation"],
-          ["R3", "Identity spoofing by email", "6", "Accepted, analysed in the threat model"],
-          ["R4", "Stale interface from the service worker", "6", "Network-first, versioned cache"],
-          ["R6", "Upload abuse", "6", "Extension whitelist, 5 MB cap, random names"],
-          ["R7", "Single developer unavailable", "6", "Weekly increments keep it runnable"]],
-      widths=[0.8, 5.2, 1.0, 6.4], size=16, row_h=0.66)
-NOTES.append("Six risks scored probability times impact, each with an active response rather than a note. Two of "
-             "them actually happened during the project - scope creep and the stale service worker - and because "
-             "they were written down in week three, both had a prepared answer.")
+table(s, [["ID", "Risk", "P x I", "Response chosen", "What happened"],
+          ["R1", "Scope creep", "9", "Mitigate: MoSCoW plus a written will-not-have list", "Happened, held"],
+          ["R2", "Data loss in a file store", "6", "Mitigate: save to disk on every mutation", "Did not occur"],
+          ["R3", "Identity spoofing by email", "6", "Accept, analyse it, plan tokens for v1.1", "Accepted"],
+          ["R4", "Stale interface from the service worker", "6", "Mitigate: network-first, versioned cache", "Happened, fixed"],
+          ["R6", "Upload abuse", "6", "Mitigate: whitelist, 5 MB cap, random names", "Did not occur"],
+          ["R7", "Single developer unavailable", "6", "Mitigate: weekly increments stay runnable", "Did not occur"]],
+      widths=[0.65, 4.0, 0.85, 4.9, 1.6], size=15, row_h=0.55)
+headline(s, "Score is probability x impact out of 9. The response is one of mitigate, accept, avoid or transfer.",
+         size=17, y=6.5)
+NOTES.append("Six risks, scored probability times impact out of nine. Each has a named response - mitigate, "
+             "accept, avoid or transfer - and the last column is the honest part: two actually happened, one I "
+             "accepted in writing, three never materialised. A register is only worth anything if you go back and "
+             "mark what actually happened.")
 
 # ---------------------------------------------------------------- 12 uml
 s = slide()
@@ -383,39 +370,7 @@ NOTES.append("Four layers. I rejected microservices, serverless and a single-fil
              "Wi-Fi. The layer boundary is what later let me move the whole interface out of the backend file in "
              "hours instead of weeks.")
 
-# ---------------------------------------------------------------- 14 database
-s = slide()
-kicker(s, "Database design")
-title(s, "Seven tables, designed relationally")
-table(s, [["Table", "Key relationship"],
-          ["users", "Email is unique; password stored as salt plus hash"],
-          ["items", "Reporter email, status, category, location"],
-          ["claim_details", "One to zero-or-one with items"],
-          ["rejected_claimants", "Composite key: item and email"],
-          ["found_reports", "Unique item and finder email"],
-          ["disputes", "Upheld or dismissed, always kept"],
-          ["messages", "Thread key: item plus the other person"]],
-      widths=[3.0, 8.3], size=17, row_h=0.6)
-NOTES.append("Seven tables designed relationally even though version one stores JSON, so the PostgreSQL "
-             "migration is a transcription rather than a redesign. The schema already exists with check "
-             "constraints, unique constraints and cascade deletes.")
-
-# ---------------------------------------------------------------- 15 design
-s = slide()
-kicker(s, "Design")
-title(s, "Four patterns, and one module held to SOLID")
-items(s, [
-    "Repository        save and load isolate storage from the API",
-    "Strategy            the privacy projection picks fields per viewer",
-    "Facade               the interface only talks to the domain over REST",
-    "Observer           unread indicators by polling, not coupling",
-], y=2.4, size=20, gap=13)
-headline(s, "public_item() satisfies all five SOLID principles, and one test keeps it honest.", size=20, y=5.85)
-NOTES.append("Four patterns, each with a reason. The line at the bottom is the one I would defend: the privacy "
-             "function satisfies all five SOLID principles, and a single test asserts that it never leaks a "
-             "private field to an anonymous viewer.")
-
-# ---------------------------------------------------------------- 16 implementation
+# ---------------------------------------------------------------- 15 implementation
 s = slide()
 kicker(s, "Implementation")
 title(s, "Standards I held myself to")
